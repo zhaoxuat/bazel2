@@ -1,15 +1,17 @@
-package(default_visibility = ["//visibility:public"])
+load("//build:utils.bzl", "go_prefix")
 
-genrule(
-    name = "genproto",
-    srcs = [":all-protos"],
-    outs = ["proto-outs"],
-    cmd = """for p in $(locations :all-protos)
-do
-    mkdir -p $@/github.com/zhaoxuat/bazel2 && \
-    rp=$$(realpath $$p) && \
-    cp -rf $${rp%.a}_go_proto_//* $@/
-done""",
+filegroup(
+    name = "package-srcs",
+    srcs = glob(["**"]),
+    tags = ["automanaged"],
+    visibility = ["//visibility:private"],
+)
+
+filegroup(
+    name = "all-srcs",
+    srcs = [":package-srcs"],
+    tags = ["automanaged"],
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
@@ -19,11 +21,25 @@ filegroup(
     ],
 )
 
+
+genrule(
+    name = "genproto",
+    srcs = [":all-protos"],
+    outs = ["proto-outs"],
+    cmd = """for p in $(locations :all-protos)
+do
+    mkdir -p $@/github.com/zhaoxuat/bazel2/ && \
+    rp=$$(realpath $$p) && \
+    cp -rf $${rp%.a}_/* $@/
+done""",
+)
+
 sh_binary(
     name = "update-proto",
     srcs = ["update-proto.sh"],
     args = [
         "$(execpaths proto-outs)",
+        go_prefix,
     ],
     data = ["proto-outs"],
 )
