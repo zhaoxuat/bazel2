@@ -1,0 +1,29 @@
+package(default_visibility = ["//visibility:public"])
+
+genrule(
+    name = "genproto",
+    srcs = [":all-protos"],
+    outs = ["proto-outs"],
+    cmd = """for p in $(locations :all-protos)
+do
+    mkdir -p $@/github.com/zhaoxuat/bazel2 && \
+    rp=$$(realpath $$p) && \
+    cp -rf $${rp%.a}_go_proto_//* $@/
+done""",
+)
+
+filegroup(
+    name = "all-protos",
+    srcs = [
+        "//cloud/agent/pkg/proto:proto",
+    ],
+)
+
+sh_binary(
+    name = "update-proto",
+    srcs = ["update-proto.sh"],
+    args = [
+        "$(execpaths proto-outs)",
+    ],
+    data = ["proto-outs"],
+)
